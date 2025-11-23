@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - Gabonextube{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="h3 mb-0">Générer une Séquence d'Images</h1>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/generate">
+                    <div class="mb-3">
+                        <label for="prompts" class="form-label">Prompts (un par ligne)</label>
+                        <textarea class="form-control" id="prompts" name="prompts" rows="10" placeholder="Entrez vos prompts ici, un par ligne..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="num_keyframes" class="form-label">Nombre de Keyframes</label>
+                        <input type="number" class="form-control" id="num_keyframes" name="num_keyframes" value="5" min="1" max="50">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Générer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+
+diffusers
+transformers
+faiss-cpu
+numpy
+Pillow
+moviepy
+streamlit
+
+opencv-python
+insightface
+accelerate
