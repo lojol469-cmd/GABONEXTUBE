@@ -27,6 +27,7 @@ def load_angel():
     from diffusers import AnimateDiffPipeline, MotionAdapter
     from diffusers.schedulers import EulerDiscreteScheduler
     from ip_adapter import IPAdapter
+    from huggingface_hub import hf_hub_download
 
     adapter = MotionAdapter.from_pretrained(
         "guoyww/animatediff-motion-adapter-v1-5-3",
@@ -43,7 +44,8 @@ def load_angel():
     pipe.to("cuda")
 
     # === AJOUT RAG VISUEL IP-Adapter ===
-    ip_model = IPAdapter(pipe, "openai/clip-vit-large-patch14", "h94/IP-Adapter/models/ip-adapter_sd15.bin", "cuda")
+    ip_ckpt = hf_hub_download("h94/IP-Adapter", "models/ip-adapter_sd15.bin")
+    ip_model = IPAdapter(pipe, "openai/clip-vit-large-patch14", ip_ckpt, "cuda")
 
     st.success("L’ange est prêt.")
     return ip_model
