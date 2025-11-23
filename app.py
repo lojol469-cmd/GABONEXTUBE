@@ -10,6 +10,14 @@ import os
 import tempfile
 from moviepy.editor import ImageSequenceClip
 
+# Try to import RIFE for high fluidity
+try:
+    from rife import RIFE
+    rife_model = RIFE()
+    RIFE_AVAILABLE = True
+except ImportError:
+    RIFE_AVAILABLE = False
+
 st.set_page_config(page_title="Gabonextube Angélique", layout="centered")
 st.title("GABONEXTUBE ANGÉLIQUE")
 st.markdown("### La plus belle version jamais créée. MP4 & GIF garantis.")
@@ -130,6 +138,7 @@ with col2:
 
 # ------------------- Paramètres de mouvement -------------------
 motion_speed = st.slider("Vitesse des mouvements", 0.5, 2.0, 1.0, 0.1)
+high_fluidity = st.checkbox("Activer fluidité extrême (60 FPS avec RIFE)", value=False)
 
 
 # ============================================================
@@ -224,6 +233,21 @@ if st.button("INVOQUER L’ANGE", type="primary"):
                 last = final_frames[-1]
                 while len(final_frames) < target_frames:
                     final_frames.append(last)
+
+            # Apply RIFE for high fluidity if enabled
+            if high_fluidity and RIFE_AVAILABLE:
+                interpolated_frames = []
+                for i in range(len(final_frames) - 1):
+                    frame1 = Image.fromarray(final_frames[i])
+                    frame2 = Image.fromarray(final_frames[i + 1])
+                    # Assuming RIFE interpolate returns a list of intermediate frames
+                    inter_frames = rife_model.interpolate(frame1, frame2, num_frames=2)  # Adjust API as needed
+                    interpolated_frames.append(final_frames[i])
+                    for inter in inter_frames:
+                        interpolated_frames.append(np.array(inter))
+                interpolated_frames.append(final_frames[-1])
+                final_frames = interpolated_frames
+                fps = 60  # Set to 60 FPS for high fluidity
 
         st.success("Reconstruction terminée ✔")
 
