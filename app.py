@@ -24,7 +24,8 @@ st.success(f"GPU détecté : {torch.cuda.get_device_name(0)}")
 # ------------------- Modèles (AnimateDiff parfait) -------------------
 @st.cache_resource(show_spinner="L’ange déploie ses ailes… (30-60s une seule fois)")
 def load_angel():
-    from diffusers import AnimateDiffPipeline, MotionAdapter, IPAdapter
+    from diffusers import AnimateDiffPipeline, MotionAdapter
+    from ip_adapter import IPAdapter
     from diffusers.schedulers import EulerDiscreteScheduler
 
     adapter = MotionAdapter.from_pretrained(
