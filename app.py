@@ -101,7 +101,7 @@ for f in [char, bg, fx]:
         refs.append(Image.open(f).convert("RGB").resize((512,512)))
 
 for r in refs:
-    st.sidebar.image(r, use_container_width=True)
+    st.sidebar.image(r, width='stretch')
 
 # ------------------- Upload vidéo de base pour montage -------------------
 st.sidebar.header("Vidéo de référence pour imiter la scène (optionnel)")
