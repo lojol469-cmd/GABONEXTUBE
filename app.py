@@ -271,6 +271,10 @@ if st.button("INVOQUER L’ANGE", type="primary"):
                     for inter in inter_frames:
                         final_frames.append(np.array(inter))
                 final_frames.append(frames[-1])
+                if len(final_frames) < target_frames:
+                    last = final_frames[-1]
+                    while len(final_frames) < target_frames:
+                        final_frames.append(last)
                 fps = 60
             else:
                 # Linear interpolation

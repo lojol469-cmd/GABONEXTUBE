@@ -18,10 +18,7 @@ class RIFE:
         # frame1 and frame2 are PIL Images
         img0 = torch.from_numpy(np.array(frame1)).permute(2, 0, 1).unsqueeze(0).float() / 255.0
         img1 = torch.from_numpy(np.array(frame2)).permute(2, 0, 1).unsqueeze(0).float() / 255.0
-        inter_frames = []
-        for i in range(1, num_frames + 1):
-            timestep = i / (num_frames + 1)
-            inter = self.model.inference(img0.cuda(), img1.cuda(), timestep=timestep)
-            inter_np = (inter.squeeze().permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
-            inter_frames.append(Image.fromarray(inter_np))
-        return inter_frames
+        inter = self.model.inference(img0.cuda(), img1.cuda())
+        inter_np = (inter.squeeze().permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
+        inter_pil = Image.fromarray(inter_np)
+        return [inter_pil] * num_frames
