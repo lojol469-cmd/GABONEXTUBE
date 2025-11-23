@@ -45,7 +45,7 @@ def load_angel():
 
     # === AJOUT RAG VISUEL IP-Adapter ===
     ip_ckpt = hf_hub_download("h94/IP-Adapter", "models/ip-adapter_sd15.bin")
-    ip_model = IPAdapter(pipe, "openai/clip-vit-base-patch32", ip_ckpt, "cuda")
+    ip_model = IPAdapter(pipe, "openai/clip-vit-large-patch14", ip_ckpt, "cuda")
 
     st.success("L’ange est prêt.")
     return ip_model
