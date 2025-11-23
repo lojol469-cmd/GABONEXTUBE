@@ -26,6 +26,7 @@ st.success(f"GPU détecté : {torch.cuda.get_device_name(0)}")
 def load_angel():
     from diffusers import AnimateDiffPipeline, MotionAdapter
     from diffusers.schedulers import EulerDiscreteScheduler
+    from ip_adapter import IPAdapter
 
     adapter = MotionAdapter.from_pretrained(
         "guoyww/animatediff-motion-adapter-v1-5-3",
@@ -41,17 +42,13 @@ def load_angel():
     pipe.enable_model_cpu_offload()
     pipe.to("cuda")
 
-    # === AJOUT RAG VISUEL IP-Adapter === (désactivé pour compatibilité)
-    # ip_adapter = IPAdapter.from_pretrained(
-    #     "h94/IP-Adapter-FaceID",  # version ultra robuste
-    #     torch_dtype=torch.float16
-    # )
-    # pipe.load_ip_adapter(ip_adapter)
+    # === AJOUT RAG VISUEL IP-Adapter ===
+    ip_model = IPAdapter(pipe, "openai/clip-vit-large-patch14", "h94/IP-Adapter/models/ip-adapter_sd15.bin", "cuda")
 
     st.success("L’ange est prêt.")
-    return pipe
+    return ip_model
 
-pipe = load_angel()
+ip_model = load_angel()
 
 # ------------------- Upload 3 images style -------------------
 st.sidebar.header("Ton style éternel")
@@ -80,17 +77,11 @@ if st.button("INVOQUER L’ANGE", type="primary"):
         st.error("Upload au moins 1 image de référence !")
     else:
         with st.spinner("L’ange tisse ton rêve… (patience, c’est divin)"):
-            prompt = f"{wish}, masterpiece, ultra detailed 8k, cinematic lighting, emotional, perfect composition"
+            prompt = f"{wish}, masterpiece, ultra detailed 8k, cinematic lighting, emotional, perfect composition, in the exact style of reference images"
             negative = "blurry, ugly, deformed, low quality, text, watermark, bad anatomy"
 
-            # === RAG VISUEL : encoder les images de style === (désactivé)
-            # style_embeds = [
-            #     pipe.encode_image(img).latent_dist.sample()
-            #     for img in refs
-            # ]
-
             with torch.autocast("cuda"):
-                output = pipe(
+                output = ip_model(
                     prompt=prompt,
                     negative_prompt=negative,
                     num_frames=16,                    # AnimateDiff = 16 frames max (boucle parfaite)
@@ -98,8 +89,8 @@ if st.button("INVOQUER L’ANGE", type="primary"):
                     num_inference_steps=28,
                     height=512, width=512,
                     generator=torch.Generator("cuda").manual_seed(42),
-                    # ip_adapter_image_embeds=style_embeds,   # ← MAGIE DU RAG
-                    # ip_adapter_scale=[0.8, 0.6, 0.5]        # ← intensité par image
+                    ip_adapter_image=refs,   # ← MAGIE DU RAG
+                    ip_adapter_scale=[0.8, 0.6, 0.5]        # ← intensité par image
                 )
             frames = output.frames[0]
 

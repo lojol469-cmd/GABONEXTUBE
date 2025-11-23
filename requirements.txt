@@ -7,6 +7,7 @@ Pillow
 moviepy
 streamlit
 opencv-python
+ip_adapter
 insightface
 accelerate
 safetensors
