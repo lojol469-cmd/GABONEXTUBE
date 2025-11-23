@@ -120,7 +120,27 @@ prompt_options = [
     "Artiste peintre avec pinceau, visage concentré aux rides expressives, atelier créatif, pinceau en mouvement, hyperdétaillé, éclairage studio, qualité professionnelle",
     "Danseuse en tutu, visage gracieux avec traits fins, mouvement élégant, scène de ballet, lumière de projecteur, détails anatomiques précis, cinématographique",
     "Scientifique âgé avec lunettes, visage ridé détaillé, laboratoire high-tech, regard curieux, arrière-plan technologique, hyperréaliste, éclairage fluorescent",
-    "Superhéros masqué, yeux visibles intenses, cape flottante, ville en arrière-plan, mouvement dynamique, détails faciaux sous le masque, qualité Veo 3"
+    "Superhéros masqué, yeux visibles intenses, cape flottante, ville en arrière-plan, mouvement dynamique, détails faciaux sous le masque, qualité Veo 3",
+    "Photographe de rue capturant un moment spontané, appareil photo vintage, expression concentrée, rue animée en arrière-plan, lumière dorée du coucher de soleil, hyperréaliste, détails ultra-fins",
+    "Chef cuisinier préparant un plat gourmet, mains expertes, ingrédients frais, cuisine professionnelle, vapeur s'élevant, éclairage chaud, textures réalistes, 4K ultra HD",
+    "Astronaute flottant dans l'espace, combinaison détaillée, Terre en arrière-plan, étoiles scintillantes, expression d'émerveillement, photoréaliste, profondeur infinie",
+    "Musicien jouant du piano à queue, doigts agiles sur les touches, salle de concert vide, lumière tamisée, émotion intense, détails musicaux précis, qualité cinématographique",
+    "Surfeur chevauchant une vague parfaite, eau cristalline, soleil éclatant, mouvement dynamique, expression de joie pure, hyperréaliste, éclaboussures détaillées",
+    "Bibliothécaire âgée rangeant des livres anciens, lunettes sur le nez, poussière dansante, rayons de bibliothèque, lumière douce, textures du papier, atmosphère paisible",
+    "Pilote de course dans un bolide rouge, casque intégral, circuit de Formule 1, vitesse extrême, expression déterminée, détails mécaniques précis, action intense",
+    "Jardinier taillant des roses, gants de protection, pétales délicats, rosée matinale, jardin luxuriant, lumière naturelle, parfums imaginaires, réalisme botanique",
+    "Magicien sur scène, cape noire, cartes volant, public en admiration, éclairage de spectacle, mouvement fluide, mystère dans les yeux, qualité professionnelle",
+    "Explorateur dans la jungle amazonienne, machette à la main, lianes denses, animaux sauvages, sueur perlant, aventure épique, détails environnementaux riches",
+    "Peintre abstrait créant une œuvre moderne, pinceaux colorés, toile blanche, taches de peinture vives, concentration absolue, studio lumineux, créativité pure",
+    "Médecin chirurgien en opération, mains gantées, instruments chirurgicaux, salle stérile, tension palpable, précision médicale, éclairage chirurgical intense",
+    "Poète écrivant sous un arbre centenaire, cahier ouvert, plume d'oie, vent léger, pensées profondes, nature environnante, moment d'inspiration poétique",
+    "Cascadeur sautant d'un bâtiment, parachute déployé, ville moderne en bas, adrénaline pure, mouvement acrobatique, détails urbains nets, action hollywoodienne",
+    "Apiculteur récoltant du miel, ruche traditionnelle, abeilles bourdonnantes, fumée apaisante, miel doré coulant, nature bienveillante, textures organiques",
+    "Archéologue découvrant une tombe ancienne, pinceau fin, hiéroglyphes révélés, sable du désert, excitation scientifique, mystère historique, lumière tamisée",
+    "Basketteur dunkant avec puissance, ballon orange, panier métallique, foule en délire, sueur volant, muscles tendus, mouvement explosif, qualité sportive",
+    "Céramiste façonnant de la poterie, argile humide, tour rotatif, mains créatives, atelier artisanal, poussière de terre, beauté artisanale, détails tactiles",
+    "Vétérinaire soignant un chiot blessé, stéthoscope autour du cou, regard compatissant, clinique vétérinaire, tendresse animale, soins médicaux, émotion pure",
+    "Sommelier dégustant un vin rare, verre cristal, nez plongé, palais expert, cave à vin, arômes complexes, sophistication culinaire, lumière chaude"
 ]
 
 selected_prompt = st.selectbox("Prompts détaillés (optionnel)", ["Personnalisé"] + prompt_options)
@@ -182,7 +202,7 @@ if st.button("INVOQUER L’ANGE", type="primary"):
 
         with st.spinner("L’ange tisse ton rêve… (patience, c’est divin)"):
 
-            negative = "blurry, ugly, deformed, low quality, text, watermark, bad anatomy, motion blur, low resolution, pixelated, noisy, jittery, unfocused face, bad framing"
+            negative = "blurry, ugly, deformed, low quality, text, watermark, bad anatomy, motion blur, low resolution, pixelated, noisy, jittery, unfocused, bad framing, artifacts, grainy, oversaturated, underexposed, cartoonish, unrealistic, poor lighting, flat colors, lack of depth, amateur"
 
             if multi_scene and scene_prompts:
                 prompts = [line.strip() for line in scene_prompts.split('\n') if line.strip()]
@@ -194,7 +214,7 @@ if st.button("INVOQUER L’ANGE", type="primary"):
 
             all_raw_frames = []
             for p in prompts:
-                prompt = f"{base_prompt}{p}, hyperrealistic, masterpiece, ultra detailed 8k, cinematic lighting, emotional, perfect composition, smooth motion, no blur, high frame rate, cinematic quality, sharp focus on face, detailed facial features, proper framing, centered composition, in the exact style of reference images, like Veo 3"
+                prompt = f"{base_prompt}{p}, photorealistic masterpiece, ultra realistic 4K HD, cinematic lighting, volumetric fog, ray tracing, depth of field, bokeh effect, hyper detailed textures, realistic skin pores, perfect anatomy, emotional depth, studio quality animation, professional VFX, beyond Veo 3, smooth motion blur, high frame rate, cinematic composition, sharp focus on facial features, detailed eyes with reflections, proper framing, centered subject, in the exact style of reference images, masterpiece quality, award-winning animation"
                 # → GÉNÉRATION DES FRAMES ANIMATEDIFF
                 with torch.autocast("cuda"):
                     if input_video:
