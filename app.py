@@ -261,18 +261,32 @@ if st.button("INVOQUER L’ANGE", type="primary"):
 
             # Apply RIFE for high fluidity if enabled
             if high_fluidity and RIFE_AVAILABLE:
-                interpolated_frames = []
-                for i in range(len(final_frames) - 1):
-                    frame1 = Image.fromarray(final_frames[i])
-                    frame2 = Image.fromarray(final_frames[i + 1])
-                    # Assuming RIFE interpolate returns a list of intermediate frames
-                    inter_frames = rife_model.interpolate(frame1, frame2, num_frames=2)  # Adjust API as needed
-                    interpolated_frames.append(final_frames[i])
+                inter_per_pair = max(1, (target_frames - len(frames)) // max(1, len(frames) - 1))
+                final_frames = []
+                for i in range(len(frames) - 1):
+                    final_frames.append(frames[i])
+                    pil_frame1 = Image.fromarray(frames[i])
+                    pil_frame2 = Image.fromarray(frames[i + 1])
+                    inter_frames = rife_model.interpolate(pil_frame1, pil_frame2, num_frames=inter_per_pair)
                     for inter in inter_frames:
-                        interpolated_frames.append(np.array(inter))
-                interpolated_frames.append(final_frames[-1])
-                final_frames = interpolated_frames
-                fps = 60  # Set to 60 FPS for high fluidity
+                        final_frames.append(np.array(inter))
+                final_frames.append(frames[-1])
+                fps = 60
+            else:
+                # Linear interpolation
+                factor = max(1, target_frames // len(frames))
+                final_frames = []
+                for i in range(len(frames)-1):
+                    final_frames.append(frames[i])
+                    inter = interpolate(frames[i], frames[i+1], factor)
+                    final_frames.extend(inter)
+                final_frames.append(frames[-1])
+                if len(final_frames) > target_frames:
+                    final_frames = final_frames[:target_frames]
+                else:
+                    last = final_frames[-1]
+                    while len(final_frames) < target_frames:
+                        final_frames.append(last)
 
         st.success("Reconstruction terminée ✔")
 
