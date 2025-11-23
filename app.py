@@ -210,20 +210,20 @@ if st.button("INVOQUER L’ANGE", type="primary"):
                     out.append(frame.astype(np.uint8))
                 return out
 
-            final = []
+            final_frames = []
             for i in range(len(frames)-1):
-                final.append(frames[i])
+                final_frames.append(frames[i])
                 inter = interpolate(frames[i], frames[i+1], factor)
-                final.extend(inter)
+                final_frames.extend(inter)
 
-            final.append(frames[-1])
+            final_frames.append(frames[-1])
 
-            if len(final) > target_frames:
-                final = final[:target_frames]
+            if len(final_frames) > target_frames:
+                final_frames = final_frames[:target_frames]
             else:
-                last = final[-1]
-                while len(final) < target_frames:
-                    final.append(last)
+                last = final_frames[-1]
+                while len(final_frames) < target_frames:
+                    final_frames.append(last)
 
         st.success("Reconstruction terminée ✔")
 
@@ -241,7 +241,7 @@ if st.button("INVOQUER L’ANGE", type="primary"):
 
             # GIF optimisé
             clip_resized = ImageSequenceClip(
-                [np.array(f.resize((448, 448), PILImage.Resampling.LANCZOS)) for f in final_frames],
+                [np.array(Image.fromarray(f).resize((448, 448), Image.Resampling.LANCZOS)) for f in final_frames],
                 fps=min(fps, 15)
             )
             clip_resized.write_gif(gif_path, logger=None, verbose=False)
