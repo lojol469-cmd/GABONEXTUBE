@@ -157,7 +157,7 @@ with col2:
     fps = st.selectbox("FPS", [16, 24, 30], index=1)
 
 # ------------------- Paramètres de mouvement -------------------
-motion_speed = st.slider("Vitesse des mouvements", 0.5, 2.0, 1.0, 0.1)
+motion_speed = st.slider("Vitesse des mouvements", 0.5, 2.0, 1.2, 0.1)
 high_fluidity = st.checkbox("Activer fluidité extrême (60 FPS avec RIFE)", value=False)
 
 multi_scene = st.checkbox("Générer plusieurs scènes cohérentes")
@@ -232,7 +232,7 @@ if st.button("INVOQUER L’ANGE", type="primary"):
                         output = pipe(
                             prompt=prompt,
                             negative_prompt=negative,
-                            num_frames=16,
+                            num_frames=24,
                             guidance_scale=8.5,
                             num_inference_steps=75,
                             height=512, width=512,
