@@ -104,8 +104,8 @@ for r in refs:
     st.sidebar.image(r, use_container_width=True)
 
 # ------------------- Upload vidéo de base pour montage -------------------
-st.sidebar.header("Vidéo de base (optionnel)")
-base_video = st.sidebar.file_uploader("Upload un GIF ou MP4 pour animer", type=["gif", "mp4"])
+st.sidebar.header("Vidéo de référence pour imiter la scène (optionnel)")
+base_video = st.sidebar.file_uploader("Upload un GIF ou MP4 pour imiter la scène", type=["gif", "mp4"])
 
 # ------------------- Prompt -------------------
 st.subheader("Fais un vœu")
@@ -132,13 +132,20 @@ else:
 
 col1, col2 = st.columns(2)
 with col1: 
-    duration = st.slider("Durée (secondes)", 3, 16, 8)
+    duration = st.slider("Durée (secondes)", 3, 60, 8)
 with col2:
     fps = st.selectbox("FPS", [16, 24, 30], index=1)
 
 # ------------------- Paramètres de mouvement -------------------
 motion_speed = st.slider("Vitesse des mouvements", 0.5, 2.0, 1.0, 0.1)
 high_fluidity = st.checkbox("Activer fluidité extrême (60 FPS avec RIFE)", value=False)
+
+multi_scene = st.checkbox("Générer plusieurs scènes cohérentes")
+scene_prompts = ""
+if multi_scene:
+    scene_prompts = st.text_area("Prompts des scènes (un par ligne)", height=150)
+
+char_desc = st.text_area("Description du personnage et décor (RAG)", value="", height=100)
 
 
 # ============================================================
@@ -148,6 +155,12 @@ if st.button("INVOQUER L’ANGE", type="primary"):
     if not refs:
         st.error("Upload au moins 1 image de référence !")
     else:
+        char_desc_text = char_desc.strip()
+        if char_desc_text:
+            base_prompt = f"{char_desc_text}, "
+        else:
+            base_prompt = ""
+
         # Fonction pour charger la vidéo
         def load_video(file):
             import imageio
@@ -169,34 +182,46 @@ if st.button("INVOQUER L’ANGE", type="primary"):
 
         with st.spinner("L’ange tisse ton rêve… (patience, c’est divin)"):
 
-            prompt = f"{wish}, hyperrealistic, masterpiece, ultra detailed 8k, cinematic lighting, emotional, perfect composition, smooth motion, no blur, high frame rate, cinematic quality, sharp focus on face, detailed facial features, proper framing, centered composition, in the exact style of reference images, like Veo 3"
             negative = "blurry, ugly, deformed, low quality, text, watermark, bad anatomy, motion blur, low resolution, pixelated, noisy, jittery, unfocused face, bad framing"
 
-            # → GÉNÉRATION DES FRAMES ANIMATEDIFF
-            with torch.autocast("cuda"):
-                if input_video:
-                    output = pipe(
-                        video=input_video,
-                        prompt=prompt,
-                        negative_prompt=negative,
-                        guidance_scale=7.5,
-                        num_inference_steps=50,
-                        strength=0.8,
-                        motion_scale=motion_speed,
-                        generator=torch.Generator("cuda").manual_seed(42)
-                    )
-                else:
-                    output = pipe(
-                        prompt=prompt,
-                        negative_prompt=negative,
-                        num_frames=16,
-                        guidance_scale=7.5,
-                        num_inference_steps=50,
-                        height=512, width=512,
-                        motion_scale=motion_speed,
-                        generator=torch.Generator("cuda").manual_seed(42)
-                    )
-            raw_frames = output.frames[0]
+            if multi_scene and scene_prompts:
+                prompts = [line.strip() for line in scene_prompts.split('\n') if line.strip()]
+                if base_video:
+                    st.warning("Multi-scène désactivé pour vidéo de référence. Utilisation du prompt principal.")
+                    prompts = [wish]
+            else:
+                prompts = [wish]
+
+            all_raw_frames = []
+            for p in prompts:
+                prompt = f"{base_prompt}{p}, hyperrealistic, masterpiece, ultra detailed 8k, cinematic lighting, emotional, perfect composition, smooth motion, no blur, high frame rate, cinematic quality, sharp focus on face, detailed facial features, proper framing, centered composition, in the exact style of reference images, like Veo 3"
+                # → GÉNÉRATION DES FRAMES ANIMATEDIFF
+                with torch.autocast("cuda"):
+                    if input_video:
+                        output = pipe(
+                            video=input_video,
+                            prompt=prompt,
+                            negative_prompt=negative,
+                            guidance_scale=7.5,
+                            num_inference_steps=50,
+                            strength=0.8,
+                            motion_scale=motion_speed,
+                            generator=torch.Generator("cuda").manual_seed(42)
+                        )
+                    else:
+                        output = pipe(
+                            prompt=prompt,
+                            negative_prompt=negative,
+                            num_frames=16,
+                            guidance_scale=7.5,
+                            num_inference_steps=50,
+                            height=512, width=512,
+                            motion_scale=motion_speed,
+                            generator=torch.Generator("cuda").manual_seed(42)
+                        )
+                all_raw_frames.extend(output.frames[0])
+
+            raw_frames = all_raw_frames
 
         st.success("Frames générées ✔")
 
