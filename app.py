@@ -24,7 +24,7 @@ st.success(f"GPU détecté : {torch.cuda.get_device_name(0)}")
 # ------------------- Modèles (AnimateDiff parfait) -------------------
 @st.cache_resource(show_spinner="L’ange déploie ses ailes… (30-60s une seule fois)")
 def load_angel():
-    from diffusers import AnimateDiffPipeline, MotionAdapter
+    from diffusers import AnimateDiffPipeline, MotionAdapter, IPAdapter
     from diffusers.schedulers import EulerDiscreteScheduler
 
     adapter = MotionAdapter.from_pretrained(
@@ -39,6 +39,15 @@ def load_angel():
     pipe.scheduler = EulerDiscreteScheduler.from_config(pipe.scheduler.config)
     pipe.enable_vae_slicing()
     pipe.enable_model_cpu_offload()
+    pipe.to("cuda")
+
+    # === AJOUT RAG VISUEL IP-Adapter ===
+    ip_adapter = IPAdapter.from_pretrained(
+        "h94/IP-Adapter-FaceID",  # version ultra robuste
+        torch_dtype=torch.float16
+    )
+    pipe.load_ip_adapter(ip_adapter)
+
     st.success("L’ange est prêt.")
     return pipe
 
@@ -74,6 +83,12 @@ if st.button("INVOQUER L’ANGE", type="primary"):
             prompt = f"{wish}, masterpiece, ultra detailed 8k, cinematic lighting, emotional, perfect composition, in the exact style of reference images"
             negative = "blurry, ugly, deformed, low quality, text, watermark, bad anatomy"
 
+            # === RAG VISUEL : encoder les images de style ===
+            style_embeds = [
+                pipe.encode_image(img).latent_dist.sample()
+                for img in refs
+            ]
+
             with torch.autocast("cuda"):
                 output = pipe(
                     prompt=prompt,
@@ -82,27 +97,83 @@ if st.button("INVOQUER L’ANGE", type="primary"):
                     guidance_scale=9.0,
                     num_inference_steps=28,
                     height=512, width=512,
-                    generator=torch.Generator("cuda").manual_seed(42)
+                    generator=torch.Generator("cuda").manual_seed(42),
+                    ip_adapter_image_embeds=style_embeds,   # ← MAGIE DU RAG
+                    ip_adapter_scale=[0.8, 0.6, 0.5]        # ← intensité par image
                 )
             frames = output.frames[0]
 
-        # === CRÉATION MP4 & GIF SANS AUCUN CRASH ===
+        # --------------------------------------------------------
+        # Après: frames = output.frames[0]
+        # On s'assure que chaque frame est un PIL.Image en RGB
+        from PIL import Image as PILImage
+
+        # Convertir les frames brutes (PIL ou numpy) en PIL.Image
+        pil_frames = []
+        for f in frames:
+            if isinstance(f, PILImage.Image):
+                pil_frames.append(f.convert("RGB"))
+            else:
+                # si c'est un tableau numpy
+                pil_frames.append(PILImage.fromarray(np.array(f)).convert("RGB"))
+
+        n_gen = len(pil_frames)
+        target_frames = max(1, int(duration * fps))  # nombre d'images souhaité
+        if target_frames == n_gen:
+            final_frames = pil_frames
+        elif target_frames < n_gen:
+            # Downsample uniformément
+            indices = np.linspace(0, n_gen - 1, target_frames).round().astype(int)
+            final_frames = [pil_frames[i] for i in indices]
+        else:
+            # Upsample: interpolation par crossfade linéaire entre paires
+            required = target_frames - n_gen
+            pairs = max(1, n_gen - 1)
+            base = required // pairs
+            rem = required % pairs
+
+            final_frames = []
+            for i in range(n_gen - 1):
+                a = np.asarray(pil_frames[i], dtype=np.float32)
+                b = np.asarray(pil_frames[i + 1], dtype=np.float32)
+
+                # ajouter la frame de départ
+                final_frames.append(PILImage.fromarray(a.astype(np.uint8)))
+
+                # combien d'interpolations pour cette paire
+                k = base + (1 if i < rem else 0)
+                for j in range(1, k + 1):
+                    alpha = j / (k + 1)
+                    interp = (1.0 - alpha) * a + alpha * b
+                    final_frames.append(PILImage.fromarray(np.clip(interp, 0, 255).astype(np.uint8)))
+
+            # ajouter la dernière frame finale
+            final_frames.append(pil_frames[-1])
+
+            # sécurité : découper ou compléter si léger décalage
+            if len(final_frames) > target_frames:
+                final_frames = final_frames[:target_frames]
+            elif len(final_frames) < target_frames:
+                # répéter la dernière image si nécessaire (rare)
+                while len(final_frames) < target_frames:
+                    final_frames.append(final_frames[-1])
+
+        # === CRÉATION MP4 & GIF SANS AUCUN CRASH (comme avant) ===
         with tempfile.TemporaryDirectory() as tmpdir:
-            # MP4
             mp4_path = os.path.join(tmpdir, "angelique.mp4")
             gif_path = os.path.join(tmpdir, "angelique.gif")
 
-            clip = ImageSequenceClip([np.array(f) for f in frames], fps=fps)
+            # pour moviepy, on donne la liste de tableaux numpy
+            clip = ImageSequenceClip([np.array(f) for f in final_frames], fps=fps)
             clip.write_videofile(mp4_path, codec="libx264", bitrate="25000k", logger=None, verbose=False)
 
-            # GIF (plus léger)
+            # GIF (plus léger) : on redimensionne avec PIL safe
             clip_resized = ImageSequenceClip(
-                [np.array(f.resize((448, 448), Image.LANCZOS)) for f in frames],
+                [np.array(f.resize((448, 448), PILImage.Resampling.LANCZOS)) for f in final_frames],
                 fps=min(fps, 15)
             )
             clip_resized.write_gif(gif_path, logger=None, verbose=False)
 
-            # Lecture des fichiers
             video_bytes = open(mp4_path, "rb").read()
             gif_bytes   = open(gif_path, "rb").read()
 
