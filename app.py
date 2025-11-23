@@ -214,7 +214,7 @@ if st.button("INVOQUER L’ANGE", type="primary"):
 
             all_raw_frames = []
             for p in prompts:
-                prompt = f"{base_prompt}{p}, photorealistic masterpiece, ultra realistic 4K HD, cinematic lighting, volumetric fog, ray tracing, depth of field, bokeh effect, hyper detailed textures, realistic skin pores, perfect anatomy, emotional depth, studio quality animation, professional VFX, beyond Veo 3, smooth motion blur, high frame rate, cinematic composition, sharp focus on facial features, detailed eyes with reflections, proper framing, centered subject, in the exact style of reference images, masterpiece quality, award-winning animation"
+                prompt = f"{base_prompt}{p}, photorealistic masterpiece, ultra realistic 4K HD, cinematic lighting, volumetric fog, ray tracing, depth of field, bokeh effect, hyper detailed textures, realistic skin pores, perfect anatomy, emotional depth, studio quality animation, professional VFX, beyond Veo 3, smooth motion blur, high frame rate, cinematic composition, sharp focus on facial features, detailed eyes with reflections, proper framing, centered subject, in the exact style of reference images, masterpiece quality, award-winning animation, strictly follow all described details, exact traits and features as specified, precise anatomy and expressions, detailed background elements, no deviations from description"
                 # → GÉNÉRATION DES FRAMES ANIMATEDIFF
                 with torch.autocast("cuda"):
                     if input_video:
@@ -222,8 +222,8 @@ if st.button("INVOQUER L’ANGE", type="primary"):
                             video=input_video,
                             prompt=prompt,
                             negative_prompt=negative,
-                            guidance_scale=7.5,
-                            num_inference_steps=50,
+                            guidance_scale=8.5,
+                            num_inference_steps=75,
                             strength=0.8,
                             motion_scale=motion_speed,
                             generator=torch.Generator("cuda").manual_seed(42)
@@ -233,8 +233,8 @@ if st.button("INVOQUER L’ANGE", type="primary"):
                             prompt=prompt,
                             negative_prompt=negative,
                             num_frames=16,
-                            guidance_scale=7.5,
-                            num_inference_steps=50,
+                            guidance_scale=8.5,
+                            num_inference_steps=75,
                             height=512, width=512,
                             motion_scale=motion_speed,
                             generator=torch.Generator("cuda").manual_seed(42)
