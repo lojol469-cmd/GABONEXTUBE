@@ -114,12 +114,10 @@ if st.button("INVOQUER L’ANGE", type="primary"):
 
             def interpolate(a, b, n):
                 out = []
-                prev = a
-                next_ = b
                 for i in range(1, n+1):
                     t = i / (n+1)
-                    frame = rife.interpolate(prev, next_, t)
-                    out.append(frame)
+                    frame = (1-t) * a.astype(np.float32) + t * b.astype(np.float32)
+                    out.append(frame.astype(np.uint8))
                 return out
 
             final = []
