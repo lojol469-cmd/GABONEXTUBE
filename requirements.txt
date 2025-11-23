@@ -10,3 +10,5 @@ streamlit
 opencv-python
 insightface
 accelerate
+safetensors
+edge-tts
